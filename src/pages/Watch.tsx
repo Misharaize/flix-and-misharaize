@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Layout/Header';
@@ -171,7 +170,7 @@ const Watch = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* YouTube Player - Embedded to play within app */}
+            {/* YouTube Player with Watermark */}
             <div className="aspect-video bg-black rounded-lg mb-4 relative overflow-hidden">
               <iframe
                 src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&iv_load_policy=3`}
@@ -181,6 +180,11 @@ const Watch = () => {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 style={{ border: 'none' }}
               />
+              
+              {/* Misharaize Flix Watermark */}
+              <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium backdrop-blur-sm">
+                Misharaize Flix
+              </div>
             </div>
 
             {/* Video Info */}
