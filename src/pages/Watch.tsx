@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Layout/Header';
@@ -49,21 +50,25 @@ const Watch = () => {
       
       setLoading(true);
       try {
-        console.log('Loading video:', videoId);
+        console.log('Loading video with new API key:', videoId);
         
         // Load video details
         const videoData = await getVideoDetails(videoId);
         if (videoData) {
+          console.log('Video loaded successfully:', videoData);
           setVideo(videoData);
           setComments(mockComments);
           
           // Load related videos based on the video title
           const searchQuery = videoData.title.split(' ').slice(0, 3).join(' ');
+          console.log('Loading related videos with query:', searchQuery);
           const relatedResponse = await searchYouTubeVideos(searchQuery, 10);
           // Filter out the current video
           const filtered = relatedResponse.items.filter(v => v.id !== videoId);
           setRelatedVideos(filtered.slice(0, 8));
+          console.log('Related videos loaded:', filtered.length);
         } else {
+          console.error('Failed to load video data');
           toast({
             title: "Video not found",
             description: "The video you're looking for doesn't exist or is unavailable.",
@@ -74,7 +79,7 @@ const Watch = () => {
         console.error('Error loading video:', error);
         toast({
           title: "Error loading video",
-          description: "Unable to load video details. Please try again.",
+          description: "Unable to load video details. Please check your internet connection and try again.",
           variant: "destructive",
         });
       } finally {
@@ -106,11 +111,35 @@ const Watch = () => {
   const handleLike = () => {
     setLiked(!liked);
     if (disliked) setDisliked(false);
+    toast({
+      title: liked ? "Removed like" : "Liked video",
+      description: liked ? "You removed your like from this video" : "Thanks for liking this video!",
+    });
   };
 
   const handleDislike = () => {
     setDisliked(!disliked);
     if (liked) setLiked(false);
+    toast({
+      title: disliked ? "Removed dislike" : "Disliked video",
+      description: disliked ? "You removed your dislike from this video" : "Thanks for your feedback!",
+    });
+  };
+
+  const handleShare = () => {
+    if (navigator.share && video) {
+      navigator.share({
+        title: video.title,
+        text: `Check out this video: ${video.title}`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied",
+        description: "Video link copied to clipboard!",
+      });
+    }
   };
 
   const handleComment = (e: React.FormEvent) => {
@@ -126,6 +155,10 @@ const Watch = () => {
       };
       setComments([newComment, ...comments]);
       setComment('');
+      toast({
+        title: "Comment added",
+        description: "Your comment has been posted successfully!",
+      });
     }
   };
 
@@ -173,16 +206,17 @@ const Watch = () => {
             {/* YouTube Player with Watermark */}
             <div className="aspect-video bg-black rounded-lg mb-4 relative overflow-hidden">
               <iframe
-                src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&iv_load_policy=3`}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1&iv_load_policy=3&origin=${window.location.origin}&enablejsapi=1`}
                 title={video.title}
                 className="w-full h-full"
                 allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 style={{ border: 'none' }}
+                referrerPolicy="strict-origin-when-cross-origin"
               />
               
               {/* Misharaize Flix Watermark */}
-              <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium backdrop-blur-sm">
+              <div className="absolute top-4 right-4 bg-black/80 text-white px-3 py-1.5 rounded-md text-sm font-semibold backdrop-blur-sm border border-white/20">
                 Misharaize Flix
               </div>
             </div>
@@ -222,7 +256,7 @@ const Watch = () => {
                   >
                     <ThumbsDown className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleShare}>
                     <Share className="h-4 w-4 mr-1" />
                     Share
                   </Button>
@@ -261,7 +295,7 @@ const Watch = () => {
                     Comments ({comments.length})
                   </h3>
                   
-                  {user && (
+                  {user ? (
                     <form onSubmit={handleComment} className="mb-6">
                       <div className="flex space-x-3">
                         <Avatar>
@@ -293,6 +327,15 @@ const Watch = () => {
                         </div>
                       </div>
                     </form>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground mb-4">
+                        Please login to add comments
+                      </p>
+                      <Button asChild>
+                        <Link to="/login">Login</Link>
+                      </Button>
+                    </div>
                   )}
 
                   <div className="space-y-4">
@@ -335,37 +378,43 @@ const Watch = () => {
           <div className="space-y-6">
             <div>
               <h3 className="font-semibold text-lg mb-4">Related Videos</h3>
-              <div className="space-y-4">
-                {relatedVideos.map((relatedVideo) => (
-                  <Link
-                    key={relatedVideo.id}
-                    to={`/watch/${relatedVideo.id}`}
-                    className="flex space-x-3 group"
-                  >
-                    <div className="relative flex-shrink-0">
-                      <img
-                        src={relatedVideo.thumbnail}
-                        alt={relatedVideo.title}
-                        className="w-40 aspect-video object-cover rounded-lg group-hover:scale-105 transition-transform"
-                      />
-                      <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-                        {relatedVideo.duration}
+              {relatedVideos.length > 0 ? (
+                <div className="space-y-4">
+                  {relatedVideos.map((relatedVideo) => (
+                    <Link
+                      key={relatedVideo.id}
+                      to={`/watch/${relatedVideo.id}`}
+                      className="flex space-x-3 group"
+                    >
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={relatedVideo.thumbnail}
+                          alt={relatedVideo.title}
+                          className="w-40 aspect-video object-cover rounded-lg group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+                          {relatedVideo.duration}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                        {relatedVideo.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-1">{relatedVideo.channelName}</p>
-                      <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
-                        <span>{formatNumber(relatedVideo.views)} views</span>
-                        <span>•</span>
-                        <span>{timeAgo(relatedVideo.publishedAt)}</span>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                          {relatedVideo.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">{relatedVideo.channelName}</p>
+                        <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
+                          <span>{formatNumber(relatedVideo.views)} views</span>
+                          <span>•</span>
+                          <span>{timeAgo(relatedVideo.publishedAt)}</span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading related videos...</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
