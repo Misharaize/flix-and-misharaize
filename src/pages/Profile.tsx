@@ -25,6 +25,7 @@ const Profile = () => {
     {
       id: 'user1',
       title: 'My First Video Tutorial',
+      description: 'Learn the basics in this comprehensive tutorial video. Perfect for beginners looking to get started.',
       thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
       duration: '8:45',
       views: 15000,
@@ -37,6 +38,7 @@ const Profile = () => {
     {
       id: 'user2',
       title: 'Cooking My Favorite Recipe',
+      description: 'Join me in the kitchen as I prepare my all-time favorite recipe. Easy to follow steps included!',
       thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/maxresdefault.jpg',
       duration: '12:30',
       views: 8500,
@@ -52,6 +54,7 @@ const Profile = () => {
     {
       id: 'liked1',
       title: 'Amazing Tech Review 2024',
+      description: 'Comprehensive review of the latest technology trends and gadgets for 2024. Must watch for tech enthusiasts.',
       thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg',
       duration: '15:20',
       views: 450000,
