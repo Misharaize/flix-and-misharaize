@@ -1,21 +1,9 @@
 
 import { VideoCard } from './VideoCard';
-
-interface Video {
-  id: string;
-  title: string;
-  thumbnail: string;
-  duration: string;
-  views: number;
-  likes: number;
-  channelName: string;
-  channelAvatar?: string;
-  publishedAt: string;
-  tags?: string[];
-}
+import { YouTubeVideo } from '@/services/youtubeApi';
 
 interface VideoGridProps {
-  videos: Video[];
+  videos: YouTubeVideo[];
   loading?: boolean;
 }
 

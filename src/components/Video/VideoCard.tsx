@@ -101,7 +101,7 @@ export const VideoCard = ({
               <Eye className="h-3 w-3" />
               <span>{formatNumber(views)}</span>
             </div>
-            {likes !== undefined && (
+            {likes !== undefined && likes > 0 && (
               <div className="flex items-center space-x-1">
                 <ThumbsUp className="h-3 w-3" />
                 <span>{formatNumber(likes)}</span>
