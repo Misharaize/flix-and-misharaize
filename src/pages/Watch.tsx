@@ -7,57 +7,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { ThumbsUp, ThumbsDown, Share, Download, Flag, Eye, Calendar, User } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share, Download, Flag, Eye, Calendar, User, Loader } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getVideoDetails, searchYouTubeVideos, YouTubeVideo } from '@/services/youtubeApi';
+import { useToast } from '@/hooks/use-toast';
 
 const Watch = () => {
   const { videoId } = useParams();
   const { user } = useAuth();
-  const [video, setVideo] = useState(null);
+  const { toast } = useToast();
+  const [video, setVideo] = useState<YouTubeVideo | null>(null);
+  const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState([]);
-  const [relatedVideos, setRelatedVideos] = useState([]);
+  const [relatedVideos, setRelatedVideos] = useState<YouTubeVideo[]>([]);
 
-  // Mock video data
-  const mockVideo = {
-    id: videoId,
-    title: 'Amazing Tech Tutorial - Learn Web Development in 2024',
-    description: `Welcome to our comprehensive web development tutorial! In this video, we'll cover everything you need to know to get started with modern web development.
-
-🚀 What you'll learn:
-- HTML5 fundamentals
-- CSS3 and modern styling
-- JavaScript ES6+
-- React.js basics
-- API integration
-- Deployment strategies
-
-📚 Resources mentioned:
-- Free code editor: VS Code
-- Documentation: MDN Web Docs
-- Practice platform: freeCodeCamp
-
-⏰ Timestamps:
-00:00 - Introduction
-02:30 - HTML Basics
-08:15 - CSS Styling
-15:40 - JavaScript Fundamentals
-25:20 - React Introduction
-35:10 - Building a Project
-45:30 - Deployment
-
-Don't forget to like and subscribe for more tutorials!`,
-    channelName: 'WebDev Pro',
-    channelAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=webdev',
-    views: 1250000,
-    likes: 85000,
-    dislikes: 1200,
-    publishedAt: '2024-01-15T00:00:00Z',
-    tags: ['Programming', 'Web Development', 'Tutorial', 'JavaScript', 'React']
-  };
-
+  // Mock comments for now
   const mockComments = [
     {
       id: '1',
@@ -74,50 +41,50 @@ Don't forget to like and subscribe for more tutorials!`,
       content: 'Started my web dev journey with this video. Amazing tutorial!',
       timestamp: '5 hours ago',
       likes: 8
-    },
-    {
-      id: '3',
-      user: 'TechEnthusiast',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tech',
-      content: 'Love the production quality and the step-by-step approach. Keep it up!',
-      timestamp: '1 day ago',
-      likes: 25
-    }
-  ];
-
-  const mockRelatedVideos = [
-    {
-      id: 'related1',
-      title: 'Advanced JavaScript Concepts',
-      thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-      duration: '18:30',
-      views: 850000,
-      likes: 45000,
-      channelName: 'WebDev Pro',
-      channelAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=webdev',
-      publishedAt: '2024-01-10T00:00:00Z',
-      tags: ['JavaScript', 'Advanced', 'Programming']
-    },
-    {
-      id: 'related2',
-      title: 'React Hooks Complete Guide',
-      thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/maxresdefault.jpg',
-      duration: '25:15',
-      views: 920000,
-      likes: 52000,
-      channelName: 'React Masters',
-      channelAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=react',
-      publishedAt: '2024-01-12T00:00:00Z',
-      tags: ['React', 'Hooks', 'Tutorial']
     }
   ];
 
   useEffect(() => {
-    // Simulate loading video data
-    setVideo(mockVideo);
-    setComments(mockComments);
-    setRelatedVideos(mockRelatedVideos);
-  }, [videoId]);
+    const loadVideo = async () => {
+      if (!videoId) return;
+      
+      setLoading(true);
+      try {
+        console.log('Loading video:', videoId);
+        
+        // Load video details
+        const videoData = await getVideoDetails(videoId);
+        if (videoData) {
+          setVideo(videoData);
+          setComments(mockComments);
+          
+          // Load related videos based on the video title
+          const searchQuery = videoData.title.split(' ').slice(0, 3).join(' ');
+          const relatedResponse = await searchYouTubeVideos(searchQuery, 10);
+          // Filter out the current video
+          const filtered = relatedResponse.items.filter(v => v.id !== videoId);
+          setRelatedVideos(filtered.slice(0, 8));
+        } else {
+          toast({
+            title: "Video not found",
+            description: "The video you're looking for doesn't exist or is unavailable.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error loading video:', error);
+        toast({
+          title: "Error loading video",
+          description: "Unable to load video details. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVideo();
+  }, [videoId, toast]);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -163,15 +130,33 @@ Don't forget to like and subscribe for more tutorials!`,
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center py-16">
+            <Loader className="h-8 w-8 animate-spin mr-3" />
+            <span>Loading video...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!video) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="aspect-video bg-muted rounded-lg mb-4"></div>
-            <div className="h-8 bg-muted rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-muted rounded w-1/2"></div>
+          <div className="text-center py-16">
+            <h3 className="text-xl font-semibold mb-2">Video not found</h3>
+            <p className="text-muted-foreground mb-4">
+              The video you're looking for doesn't exist or is unavailable.
+            </p>
+            <Button asChild>
+              <Link to="/">Go Home</Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -186,14 +171,15 @@ Don't forget to like and subscribe for more tutorials!`,
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Video Player */}
+            {/* YouTube Player - Embedded to play within app */}
             <div className="aspect-video bg-black rounded-lg mb-4 relative overflow-hidden">
               <iframe
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&iv_load_policy=3`}
                 title={video.title}
                 className="w-full h-full"
                 allowFullScreen
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                style={{ border: 'none' }}
               />
             </div>
 
@@ -222,7 +208,7 @@ Don't forget to like and subscribe for more tutorials!`,
                     className="flex items-center space-x-1"
                   >
                     <ThumbsUp className="h-4 w-4" />
-                    <span>{formatNumber(video.likes + (liked ? 1 : 0))}</span>
+                    <span>{formatNumber((video.likes || 0) + (liked ? 1 : 0))}</span>
                   </Button>
                   <Button
                     variant={disliked ? "default" : "outline"}
@@ -231,15 +217,10 @@ Don't forget to like and subscribe for more tutorials!`,
                     className="flex items-center space-x-1"
                   >
                     <ThumbsDown className="h-4 w-4" />
-                    <span>{formatNumber(video.dislikes + (disliked ? 1 : 0))}</span>
                   </Button>
                   <Button variant="outline" size="sm">
                     <Share className="h-4 w-4 mr-1" />
                     Share
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-1" />
-                    Download
                   </Button>
                   <Button variant="outline" size="sm">
                     <Flag className="h-4 w-4" />
@@ -259,13 +240,12 @@ Don't forget to like and subscribe for more tutorials!`,
                     </Avatar>
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{video.channelName}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">1.2M subscribers</p>
-                      <Button>Subscribe</Button>
+                      <Button className="mt-2">Subscribe</Button>
                     </div>
                   </div>
                   
                   <div className="mt-4">
-                    <p className="whitespace-pre-wrap text-sm">{video.description}</p>
+                    <p className="whitespace-pre-wrap text-sm line-clamp-6">{video.description}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -352,31 +332,31 @@ Don't forget to like and subscribe for more tutorials!`,
             <div>
               <h3 className="font-semibold text-lg mb-4">Related Videos</h3>
               <div className="space-y-4">
-                {relatedVideos.map((video) => (
+                {relatedVideos.map((relatedVideo) => (
                   <Link
-                    key={video.id}
-                    to={`/watch/${video.id}`}
+                    key={relatedVideo.id}
+                    to={`/watch/${relatedVideo.id}`}
                     className="flex space-x-3 group"
                   >
                     <div className="relative flex-shrink-0">
                       <img
-                        src={video.thumbnail}
-                        alt={video.title}
+                        src={relatedVideo.thumbnail}
+                        alt={relatedVideo.title}
                         className="w-40 aspect-video object-cover rounded-lg group-hover:scale-105 transition-transform"
                       />
                       <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-                        {video.duration}
+                        {relatedVideo.duration}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                        {video.title}
+                        {relatedVideo.title}
                       </h4>
-                      <p className="text-xs text-muted-foreground mt-1">{video.channelName}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{relatedVideo.channelName}</p>
                       <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
-                        <span>{formatNumber(video.views)} views</span>
+                        <span>{formatNumber(relatedVideo.views)} views</span>
                         <span>•</span>
-                        <span>{timeAgo(video.publishedAt)}</span>
+                        <span>{timeAgo(relatedVideo.publishedAt)}</span>
                       </div>
                     </div>
                   </Link>

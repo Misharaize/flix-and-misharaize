@@ -25,6 +25,7 @@ export const Header = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
     }
   };
 
@@ -41,12 +42,12 @@ export const Header = () => {
           </span>
         </Link>
 
-        {/* Search */}
+        {/* Main Search Bar */}
         <form onSubmit={handleSearch} className="flex-1 max-w-2xl mx-4">
           <div className="relative">
             <Input
               type="search"
-              placeholder="Search videos..."
+              placeholder="Search YouTube videos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-4 pr-12 py-2 bg-muted/50 border-muted focus:border-primary focus:ring-1 focus:ring-primary"
@@ -55,7 +56,8 @@ export const Header = () => {
               type="submit"
               variant="ghost"
               size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-primary/20"
+              disabled={!searchQuery.trim()}
             >
               <Search className="h-4 w-4" />
             </Button>

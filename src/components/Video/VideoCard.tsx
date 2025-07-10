@@ -10,7 +10,7 @@ interface VideoCardProps {
   thumbnail: string;
   duration: string;
   views: number;
-  likes: number;
+  likes?: number;
   channelName: string;
   channelAvatar?: string;
   publishedAt: string;
@@ -40,6 +40,7 @@ export const VideoCard = ({
     const published = new Date(date);
     const diffInHours = Math.floor((now.getTime() - published.getTime()) / (1000 * 60 * 60));
     
+    if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
     if (diffInHours < 720) return `${Math.floor(diffInHours / 168)}w ago`;
@@ -47,13 +48,14 @@ export const VideoCard = ({
   };
 
   return (
-    <Card className="video-card group border-0 bg-card/50">
+    <Card className="video-card group border-0 bg-card/50 hover:bg-card/80 transition-colors">
       <Link to={`/watch/${id}`}>
         <div className="relative overflow-hidden rounded-t-lg">
           <img
             src={thumbnail}
             alt={title}
             className="w-full aspect-video object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
           />
           
           {/* Play overlay */}
@@ -66,7 +68,7 @@ export const VideoCard = ({
           {/* Duration */}
           <Badge 
             variant="secondary" 
-            className="absolute bottom-2 right-2 bg-black/70 text-white hover:bg-black/70"
+            className="absolute bottom-2 right-2 bg-black/70 text-white hover:bg-black/70 text-xs"
           >
             {duration}
           </Badge>
@@ -75,7 +77,7 @@ export const VideoCard = ({
 
       <CardContent className="p-4">
         <Link to={`/watch/${id}`}>
-          <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors mb-2">
+          <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors mb-2 leading-tight">
             {title}
           </h3>
         </Link>
@@ -89,7 +91,7 @@ export const VideoCard = ({
               <User className="h-4 w-4 text-muted-foreground" />
             )}
           </div>
-          <span className="text-sm text-muted-foreground font-medium">{channelName}</span>
+          <span className="text-sm text-muted-foreground font-medium truncate">{channelName}</span>
         </div>
 
         {/* Stats */}
@@ -99,10 +101,12 @@ export const VideoCard = ({
               <Eye className="h-3 w-3" />
               <span>{formatNumber(views)}</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <ThumbsUp className="h-3 w-3" />
-              <span>{formatNumber(likes)}</span>
-            </div>
+            {likes !== undefined && (
+              <div className="flex items-center space-x-1">
+                <ThumbsUp className="h-3 w-3" />
+                <span>{formatNumber(likes)}</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-1">
             <Clock className="h-3 w-3" />
