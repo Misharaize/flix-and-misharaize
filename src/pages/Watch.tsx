@@ -4,7 +4,7 @@ import { Header } from '@/components/Layout/Header';
 import { VideoGrid } from '@/components/Video/VideoGrid';
 import { VideoManager } from '@/components/Video/VideoManager';
 import { useQuery } from '@tanstack/react-query';
-import { youtubeApi } from '@/services/youtubeApi';
+import { getVideoDetails, searchYouTubeVideos } from '@/services/youtubeApi';
 import { Loader } from 'lucide-react';
 
 const Watch = () => {
@@ -12,13 +12,13 @@ const Watch = () => {
 
   const { data: videoData, isLoading: videoLoading } = useQuery({
     queryKey: ['video', videoId],
-    queryFn: () => youtubeApi.getVideoDetails(videoId!),
+    queryFn: () => getVideoDetails(videoId!),
     enabled: !!videoId,
   });
 
   const { data: relatedVideos, isLoading: relatedLoading } = useQuery({
     queryKey: ['related', videoId],
-    queryFn: () => youtubeApi.searchVideos('trending', 12),
+    queryFn: () => searchYouTubeVideos('trending', 12),
     enabled: !!videoId,
   });
 
@@ -120,7 +120,7 @@ const Watch = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {relatedVideos?.slice(0, 10).map((video) => (
+                {relatedVideos?.items?.slice(0, 10).map((video) => (
                   <div key={video.id} className="flex space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className="relative w-40 aspect-video flex-shrink-0">
                       <img

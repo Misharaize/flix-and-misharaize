@@ -10,6 +10,7 @@ interface VideoDownloadProps {
   videoId: string;
   videoTitle: string;
   onClose?: () => void;
+  onDownloadComplete?: () => void;
 }
 
 interface DownloadOption {
@@ -28,7 +29,7 @@ const downloadOptions: DownloadOption[] = [
   { quality: 'Medium', format: 'mp3', size: '~3MB', type: 'audio' },
 ];
 
-export const VideoDownload = ({ videoId, videoTitle, onClose }: VideoDownloadProps) => {
+export const VideoDownload = ({ videoId, videoTitle, onClose, onDownloadComplete }: VideoDownloadProps) => {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -54,6 +55,10 @@ export const VideoDownload = ({ videoId, videoTitle, onClose }: VideoDownloadPro
         title: "Download started",
         description: `${videoTitle} (${option.quality}) download has been initiated.`,
       });
+
+      if (onDownloadComplete) {
+        onDownloadComplete();
+      }
     } catch (error) {
       console.error('Download failed:', error);
       toast({
