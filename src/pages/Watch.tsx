@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Layout/Header';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { VideoDownload } from '@/components/Video/VideoDownload';
 import { ThumbsUp, ThumbsDown, Share, Download, Flag, Eye, Calendar, User, Loader } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getVideoDetails, searchYouTubeVideos, YouTubeVideo } from '@/services/youtubeApi';
@@ -23,6 +23,7 @@ const Watch = () => {
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState([]);
   const [relatedVideos, setRelatedVideos] = useState<YouTubeVideo[]>([]);
+  const [showDownload, setShowDownload] = useState(false);
 
   // Mock comments for now
   const mockComments = [
@@ -52,18 +53,15 @@ const Watch = () => {
       try {
         console.log('Loading video with API key:', videoId);
         
-        // Load video details
         const videoData = await getVideoDetails(videoId);
         if (videoData) {
           console.log('Video loaded successfully:', videoData);
           setVideo(videoData);
           setComments(mockComments);
           
-          // Load related videos based on the video title
           const searchQuery = videoData.title.split(' ').slice(0, 3).join(' ');
           console.log('Loading related videos with query:', searchQuery);
           const relatedResponse = await searchYouTubeVideos(searchQuery, 10);
-          // Filter out the current video
           const filtered = relatedResponse.items.filter(v => v.id !== videoId);
           setRelatedVideos(filtered.slice(0, 8));
           console.log('Related videos loaded:', filtered.length);
@@ -215,7 +213,6 @@ const Watch = () => {
                 referrerPolicy="strict-origin-when-cross-origin"
               />
               
-              {/* Misharaize Flix Watermark */}
               <div className="absolute top-4 right-4 bg-black/80 text-white px-4 py-2 rounded-lg text-sm font-bold backdrop-blur-sm border border-white/20 shadow-lg z-10">
                 <span className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent font-extrabold">
                   Misharaize Flix
@@ -262,11 +259,30 @@ const Watch = () => {
                     <Share className="h-4 w-4 mr-1" />
                     Share
                   </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowDownload(true)}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download
+                  </Button>
                   <Button variant="outline" size="sm">
                     <Flag className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+
+              {/* Download Modal */}
+              {showDownload && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <VideoDownload
+                    videoId={videoId!}
+                    videoTitle={video.title}
+                    onClose={() => setShowDownload(false)}
+                  />
+                </div>
+              )}
 
               {/* Channel Info */}
               <Card>

@@ -1,17 +1,18 @@
-
 import { Header } from '@/components/Layout/Header';
 import { VideoGrid } from '@/components/Video/VideoGrid';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { ProfilePictureUpload } from '@/components/Profile/ProfilePictureUpload';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, MapPin, Users, Video, Heart, Eye, Settings } from 'lucide-react';
+import { Calendar, MapPin, Video, Heart, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const [showPictureUpload, setShowPictureUpload] = useState(false);
 
   const userStats = {
     uploads: 15,
@@ -72,6 +73,13 @@ const Profile = () => {
     return num.toString();
   };
 
+  const handleAvatarUpdate = (newAvatarUrl: string) => {
+    if (user && updateUser) {
+      updateUser({ ...user, avatar: newAvatarUrl });
+    }
+    setShowPictureUpload(false);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -95,20 +103,33 @@ const Profile = () => {
         <Card className="mb-8">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
-              <Avatar className="h-32 w-32 border-4 border-primary">
-                <AvatarImage src={user.avatar} alt={user.username} />
-                <AvatarFallback className="text-2xl">
-                  {user.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar 
+                  className="h-32 w-32 border-4 border-primary cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setShowPictureUpload(true)}
+                >
+                  <AvatarImage src={user.avatar} alt={user.username} />
+                  <AvatarFallback className="text-2xl">
+                    {user.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-2 -right-2 bg-primary rounded-full p-2">
+                  <Settings className="h-4 w-4 text-primary-foreground" />
+                </div>
+              </div>
               
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                   <h1 className="text-3xl font-bold">{user.username}</h1>
-                  <Button variant="outline" className="mt-2 sm:mt-0">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Button>
+                  <div className="flex space-x-2 mt-2 sm:mt-0">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowPictureUpload(true)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="flex items-center space-x-4 text-muted-foreground mb-4">
@@ -127,7 +148,6 @@ const Profile = () => {
                   Welcome to my channel!
                 </p>
                 
-                {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">{userStats.uploads}</div>
@@ -155,6 +175,29 @@ const Profile = () => {
           </CardContent>
         </Card>
 
+        {/* Profile Picture Upload Modal */}
+        {showPictureUpload && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-background rounded-lg p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Update Profile Picture</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowPictureUpload(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              <ProfilePictureUpload
+                currentAvatar={user.avatar}
+                username={user.username}
+                onAvatarUpdate={handleAvatarUpdate}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Content Tabs */}
         <Tabs defaultValue="videos" className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-3">
@@ -167,7 +210,7 @@ const Profile = () => {
               <span>Liked</span>
             </TabsTrigger>
             <TabsTrigger value="playlists" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
+              <Video className="h-4 w-4" />
               <span>Playlists</span>
             </TabsTrigger>
           </TabsList>
@@ -219,7 +262,7 @@ const Profile = () => {
               <h2 className="text-xl font-semibold">Playlists (0)</h2>
             </div>
             <div className="text-center py-16">
-              <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">No playlists yet</h3>
               <p className="text-muted-foreground mb-4">
                 Create playlists to organize your favorite videos
