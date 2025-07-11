@@ -50,7 +50,7 @@ const Watch = () => {
       
       setLoading(true);
       try {
-        console.log('Loading video with new API key:', videoId);
+        console.log('Loading video with API key:', videoId);
         
         // Load video details
         const videoData = await getVideoDetails(videoId);
@@ -206,7 +206,7 @@ const Watch = () => {
             {/* YouTube Player with Watermark */}
             <div className="aspect-video bg-black rounded-lg mb-4 relative overflow-hidden">
               <iframe
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1&iv_load_policy=3&origin=${window.location.origin}&enablejsapi=1`}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1&iv_load_policy=3&origin=${window.location.origin}&enablejsapi=1&controls=1&fs=1&cc_load_policy=0&disablekb=0`}
                 title={video.title}
                 className="w-full h-full"
                 allowFullScreen
@@ -216,8 +216,10 @@ const Watch = () => {
               />
               
               {/* Misharaize Flix Watermark */}
-              <div className="absolute top-4 right-4 bg-black/80 text-white px-3 py-1.5 rounded-md text-sm font-semibold backdrop-blur-sm border border-white/20">
-                Misharaize Flix
+              <div className="absolute top-4 right-4 bg-black/80 text-white px-4 py-2 rounded-lg text-sm font-bold backdrop-blur-sm border border-white/20 shadow-lg z-10">
+                <span className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent font-extrabold">
+                  Misharaize Flix
+                </span>
               </div>
             </div>
 

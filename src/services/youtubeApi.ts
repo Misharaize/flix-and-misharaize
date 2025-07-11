@@ -1,5 +1,5 @@
 
-const YOUTUBE_API_KEY = 'AIzaSyCkVoedNjBrL2okwFRSe_P9fggwDVe-yWo';
+const YOUTUBE_API_KEY = 'AIzaSyCciiz8wB3yKhMGa8mEU3fGF_r1R-Qix2w';
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
 export interface YouTubeVideo {
@@ -17,7 +17,7 @@ export interface YouTubeVideo {
 }
 
 export interface YouTubeSearchResponse {
-  items: any[];
+  items: YouTubeVideo[];
   nextPageToken?: string;
   prevPageToken?: string;
   pageInfo: {
