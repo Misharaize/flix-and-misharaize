@@ -1,3 +1,4 @@
+
 import { Header } from '@/components/Layout/Header';
 import { VideoGrid } from '@/components/Video/VideoGrid';
 import { Button } from '@/components/ui/button';
@@ -6,13 +7,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfilePictureUpload } from '@/components/Profile/ProfilePictureUpload';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, MapPin, Video, Heart, Settings } from 'lucide-react';
+import { Calendar, MapPin, Video, Heart, Settings, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const [showPictureUpload, setShowPictureUpload] = useState(false);
+  const { toast } = useToast();
 
   const userStats = {
     uploads: 15,
@@ -22,7 +25,7 @@ const Profile = () => {
     totalLikes: 8900
   };
 
-  const userVideos = [
+  const [userVideos, setUserVideos] = useState([
     {
       id: 'user1',
       title: 'My First Video Tutorial',
@@ -49,7 +52,7 @@ const Profile = () => {
       publishedAt: '2024-01-18T00:00:00Z',
       tags: ['Cooking', 'Food']
     }
-  ];
+  ]);
 
   const likedVideos = [
     {
@@ -78,6 +81,20 @@ const Profile = () => {
       updateUser({ ...user, avatar: newAvatarUrl });
     }
     setShowPictureUpload(false);
+  };
+
+  const handleDeleteVideo = (videoId: string) => {
+    const videoToDelete = userVideos.find(v => v.id === videoId);
+    if (videoToDelete) {
+      const confirmDelete = window.confirm(`Are you sure you want to delete "${videoToDelete.title}"? This action cannot be undone.`);
+      if (confirmDelete) {
+        setUserVideos(prev => prev.filter(v => v.id !== videoId));
+        toast({
+          title: "Video deleted",
+          description: "Your video has been successfully deleted.",
+        });
+      }
+    }
   };
 
   if (!user) {
@@ -225,7 +242,49 @@ const Profile = () => {
               </Button>
             </div>
             {userVideos.length > 0 ? (
-              <VideoGrid videos={userVideos} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {userVideos.map((video) => (
+                  <div key={video.id} className="relative group">
+                    <div 
+                      className="relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => window.open(`/watch/${video.id}`, '_blank')}
+                    >
+                      <div className="relative aspect-video">
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                          {video.duration}
+                        </div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                          {video.title}
+                        </h3>
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                          <span>{formatNumber(video.views)} views</span>
+                          <span>•</span>
+                          <span>{new Date(video.publishedAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteVideo(video.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="text-center py-16">
                 <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
