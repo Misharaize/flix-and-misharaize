@@ -1,23 +1,16 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Maximize, 
-  Settings, 
   Share, 
   ThumbsUp, 
   ThumbsDown,
   Download,
   Bookmark,
-  Flag,
-  MoreVertical
+  Flag
 } from 'lucide-react';
 import { VideoDownload } from './VideoDownload';
 import { useToast } from '@/hooks/use-toast';
